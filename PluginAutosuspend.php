@@ -349,6 +349,10 @@ class PluginAutosuspend extends ServicePlugin
                     if (!in_array($invoiceEntry->AppliesTo(), array_keys($overduePackages))) {
                         $package = new UserPackage($invoiceEntry->AppliesTo(), array(), $this->user);
                         if ($package->status != 1) continue;
+                        // ignore this user package, as we are set to override the autosuspend.
+                        if ( $package->getCustomField('Override AutoSuspend') == 1 ) {
+                            continue;
+                        }
                         $overduePackages[$invoiceEntry->AppliesTo()] = $invoice->getDate('timestamp');
                     }
                 } else {
