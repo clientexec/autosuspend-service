@@ -24,65 +24,65 @@ class PluginAutosuspend extends ServicePlugin
     function getVariables()
     {
         $variables = array(
-            /*T*/'Plugin Name'/*/T*/   => array(
+            lang('Plugin Name')   => array(
                 'type'          => 'hidden',
-                'description'   => /*T*/''/*/T*/,
-                'value'         => /*T*/'Auto Suspend / Unsuspend'/*/T*/,
+                'description'   => '',
+                'value'         => lang('Auto Suspend / Unsuspend'),
             ),
-            /*T*/'Enabled'/*/T*/       => array(
+            lang('Enabled')       => array(
                 'type'          => 'yesno',
-                'description'   => /*T*/'When enabled, overdue packages will be suspended when this service is run.'/*/T*/,
+                'description'   => lang('When enabled, overdue packages will be suspended when this service is run.'),
                 'value'         => '0',
             ),
-            /*T*/'E-mail Notifications'/*/T*/       => array(
+            lang('E-mail Notifications')       => array(
                 'type'          => 'textarea',
-                'description'   => /*T*/'When a package requires manual suspension you will be notified at this E-mail address. If packages are suspended when this service is run, a summary E-mail will be sent to this address.'/*/T*/,
+                'description'   => lang('When a package requires manual suspension you will be notified at this E-mail address. If packages are suspended when this service is run, a summary E-mail will be sent to this address.'),
                 'value'         => '',
             ),
-            /*T*/'Suspend Customer'/*/T*/    => array(
+            lang('Suspend Customer')    => array(
                 'type'          => 'yesno',
-                'description'   => /*T*/'When enabled, all customers packages will be suspended if a recurringfee not associated with a package is overdue.'/*/T*/,
+                'description'   => lang('When enabled, all customers packages will be suspended if a recurringfee not associated with a package is overdue.'),
                 'value'         => '1',
             ),
-            /*T*/'Enable/Disable Unsuspension'/*/T*/ => array(
+            lang('Enable/Disable Unsuspension') => array(
                 'type'          => 'yesno',
-                'description'   => /*T*/'When enabled, suspended and paid packages will be unsuspended when this service is run.'/*/T*/,
+                'description'   => lang('When enabled, suspended and paid packages will be unsuspended when this service is run.'),
                 'value'         => '0',
             ),
-            /*T*/'Days Overdue Before Suspending'/*/T*/    => array(
+            lang('Days Overdue Before Suspending')    => array(
                 'type'          => 'text',
-                'description'   => /*T*/'Only suspend packages that are this many days overdue. Enter 0 here to disable package suspension'/*/T*/,
+                'description'   => lang('Only suspend packages that are this many days overdue. Enter 0 here to disable package suspension'),
                 'value'         => '7',
             ),
-            /*T*/'Run schedule - Minute'/*/T*/  => array(
+            lang('Run schedule - Minute')  => array(
                 'type'          => 'text',
-                'description'   => /*T*/'Enter number, range, list or steps'/*/T*/,
+                'description'   => lang('Enter number, range, list or steps'),
                 'value'         => '0',
                 'helpid'        => '8',
             ),
-            /*T*/'Run schedule - Hour'/*/T*/  => array(
+            lang('Run schedule - Hour')  => array(
                 'type'          => 'text',
-                'description'   => /*T*/'Enter number, range, list or steps'/*/T*/,
+                'description'   => lang('Enter number, range, list or steps'),
                 'value'         => '0',
             ),
-            /*T*/'Run schedule - Day'/*/T*/  => array(
+            lang('Run schedule - Day')  => array(
                 'type'          => 'text',
-                'description'   => /*T*/'Enter number, range, list or steps'/*/T*/,
+                'description'   => lang('Enter number, range, list or steps'),
                 'value'         => '*',
             ),
-            /*T*/'Run schedule - Month'/*/T*/  => array(
+            lang('Run schedule - Month')  => array(
                 'type'          => 'text',
-                'description'   => /*T*/'Enter number, range, list or steps'/*/T*/,
+                'description'   => lang('Enter number, range, list or steps'),
                 'value'         => '*',
             ),
-            /*T*/'Run schedule - Day of the week'/*/T*/  => array(
+            lang('Run schedule - Day of the week')  => array(
                 'type'          => 'text',
-                'description'   => /*T*/'Enter number in range 0-6 (0 is Sunday) or a 3 letter shortcut (e.g. sun)'/*/T*/,
+                'description'   => lang('Enter number in range 0-6 (0 is Sunday) or a 3 letter shortcut (e.g. sun)'),
                 'value'         => '*',
             ),
-            /*T*/'Notified Package List'/*/T*/ => array(
+            lang('Notified Package List') => array(
                 'type'          => 'hidden',
-                'description'   => /*T*/'Used to store package IDs of manually suspended packages whose E-mail has already been sent.'/*/T*/,
+                'description'   => lang('Used to store package IDs of manually suspended packages whose E-mail has already been sent.'),
                 'value'         => ''
             )
         );
