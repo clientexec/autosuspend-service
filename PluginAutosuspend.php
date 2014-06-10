@@ -41,7 +41,7 @@ class PluginAutosuspend extends ServicePlugin
             ),
             lang('Suspend Customer')    => array(
                 'type'          => 'yesno',
-                'description'   => lang('When enabled, all customers packages will be suspended if a recurringfee not associated with a package is overdue.'),
+                'description'   => lang('When enabled, all customers packages will be suspended if a recurring fee not associated with a package is overdue.'),
                 'value'         => '1',
             ),
             lang('Enable/Disable Unsuspension') => array(
@@ -236,7 +236,7 @@ class PluginAutosuspend extends ServicePlugin
             array_unshift($messages, $this->user->lang('%s package(s) unsuspended', sizeof($autoUnsuspend)));
         }
         if($this->settings->get('plugin_autosuspend_Enable/Disable Unsuspension')==0 and $dueDays==0) {
-            array_unshift($messages, $this->user->lang('As you disabled both the services.The system has nothing to do.'));
+            array_unshift($messages, $this->user->lang('As you disabled both the services. The system has nothing to do.'));
         }
         $this->settings->updateValue("plugin_autosuspend_Notified Package List", serialize($newPreEmailed));
         return $messages;
