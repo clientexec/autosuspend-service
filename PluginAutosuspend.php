@@ -269,6 +269,7 @@ class PluginAutosuspend extends ServicePlugin
             $tmpInfo['domain'] = '<a href="index.php?fuse=clients&controller=userprofile&view=profileproduct&selectedtab=groupinfo&frmClientID=' . $user->getId() . '&id=' . $domain->getId() . '">' . $domain->getReference(true) . '</a>';
             $tmpInfo['date'] = date($this->settings->get('Date Format'), $dueDate);
             $tmpInfo['manual'] = $auto;
+            $tmpInfo['status'] = $this->user->lang('Suspending');
             $returnArray['data'][] = $tmpInfo;
         }
         foreach ($suspendedArray as $packageId) {
@@ -291,6 +292,7 @@ class PluginAutosuspend extends ServicePlugin
             $tmpInfo['domain'] = '<a href="index.php?fuse=clients&controller=userprofile&view=profileproduct&selectedtab=groupinfo&frmClientID=' . $user->getId() . '&id=' . $domain->getId() . '">' . $domain->getReference(true) . '</a>';
             $tmpInfo['date'] = '';
             $tmpInfo['manual'] = $auto;
+            $tmpInfo['status'] = $this->user->lang('Unsuspending');
             $returnArray['data'][] = $tmpInfo;
         }
         $returnArray["totalcount"] = count($returnArray['data']);
@@ -300,7 +302,8 @@ class PluginAutosuspend extends ServicePlugin
             $this->user->lang('Package Name'),
             $this->user->lang('Domain'),
             $this->user->lang('Due Date'),
-            $this->user->lang('Requires Manual Suspension?')
+            $this->user->lang('Requires Manual Suspension?'),
+            $this->user->lang('Status')
         );
         return $returnArray;
     }
