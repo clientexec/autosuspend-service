@@ -6,6 +6,7 @@ require_once 'modules/clients/models/UserPackageGateway.php';
 require_once 'modules/billing/models/Invoice.php';
 require_once 'modules/billing/models/InvoiceEntry.php';
 require_once 'modules/admin/models/ServicePlugin.php';
+require_once 'modules/admin/models/StatusAliasGateway.php';
 
 /**
  * All plugin variables/settings to be used for this particular service.
@@ -342,16 +343,17 @@ class PluginAutosuspend extends ServicePlugin
         $result = $this->db->query($query, @$this->settings->get('plugin_autosuspend_Days Overdue Before Suspending'));
         $overduePackages = array();
         $overdueCustomers = array();
+        $statusGateway = StatusAliasGateway::getInstance($this->user);
         while ($row = $result->fetch()) {
             $invoice = new Invoice($row['id']);
             $user = new User($invoice->getUserID());
-            if ($user->getStatus() != 1) continue;
+            if (!$statusGateway->isActiveUserStatus($user->getStatus())) continue;
             foreach ($invoice->getInvoiceEntries() as $invoiceEntry) {
                 if ($invoiceEntry->AppliesTo() != 0) {
                     // Found an overdue package, add it to the list
                     if (!in_array($invoiceEntry->AppliesTo(), array_keys($overduePackages))) {
                         $package = new UserPackage($invoiceEntry->AppliesTo(), array(), $this->user);
-                        if ($package->status != 1) continue;
+                        if (!$statusGateway->isActivePackageStatus($package->status)) continue;
                         // ignore this user package, as we are set to override the autosuspend.
                         if ( $package->getCustomField('Override AutoSuspend') == 1 ) {
                             continue;
@@ -370,11 +372,12 @@ class PluginAutosuspend extends ServicePlugin
         if ( $this->settings->get('plugin_autosuspend_Suspend Customer') == 1 ) {
             // Now we have all the overdue packages and clients.
             // We'll loop through the clients and all their packages to the list.
+            $statusActive = StatusAliasGateway::packageActiveAliases($this->user);
             foreach ($overdueCustomers as $customerId => $dueDate) {
                 $query = "SELECT id "
                         ."FROM domains "
                         ."WHERE CustomerID = ? "
-                        ."AND status = 1 ";
+                        ."AND status IN (".implode(', ', $statusActive).") ";
                 $result = $this->db->query($query, $customerId);
                 while ($row = $result->fetch()) {
                     if (!in_array($row['id'], array_keys($overduePackages))) {
@@ -391,9 +394,10 @@ class PluginAutosuspend extends ServicePlugin
     function _getSuspendedPackages()
     {
         // Select domains that should not be unsuspended due to an invoice being overdue with entries that do no apply to any domains. (apply to entire account)
+        $statusSuspended = StatusAliasGateway::getInstance($this->user)->getPackageStatusIdsFor(PACKAGE_STATUS_SUSPENDED);
         $query = "SELECT d.id AS domain_id "
                 ."FROM `domains` d "
-                ."WHERE d.`status` = 2 "
+                ."WHERE d.`status` IN (".implode(', ', $statusSuspended).") "
                 ."AND (EXISTS(SELECT * "
                 ."            FROM `invoice` i "
                 ."            JOIN `invoiceentry` ie "
@@ -412,7 +416,7 @@ class PluginAutosuspend extends ServicePlugin
         // Find all packages eligible for unsuspend
         $query = "SELECT d.id AS domain_id "
                 ."FROM `domains` d "
-                ."WHERE d.`status` = 2 "
+                ."WHERE d.`status` IN (".implode(', ', $statusSuspended).") "
                 ."AND (NOT EXISTS(SELECT * "
                 ."                FROM `invoice` i "
                 ."                JOIN `invoiceentry` ie "
