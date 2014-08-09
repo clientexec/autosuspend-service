@@ -7,6 +7,10 @@ require_once 'modules/billing/models/Invoice.php';
 require_once 'modules/billing/models/InvoiceEntry.php';
 require_once 'modules/admin/models/ServicePlugin.php';
 require_once 'modules/admin/models/StatusAliasGateway.php';
+require_once 'modules/support/models/TicketGateway.php';
+require_once 'modules/support/models/TicketLog.php';
+require_once 'modules/support/models/TicketTypeGateway.php';
+require_once 'modules/support/models/Ticket_EventLog.php';
 
 /**
  * All plugin variables/settings to be used for this particular service.
@@ -19,8 +23,9 @@ require_once 'modules/admin/models/StatusAliasGateway.php';
 */
 class PluginAutosuspend extends ServicePlugin
 {
-    protected $featureSet = 'products';
     public $hasPendingItems = true;
+    protected $featureSet = 'products';
+    private $ticketNotifications;
 
     function getVariables()
     {
@@ -54,6 +59,11 @@ class PluginAutosuspend extends ServicePlugin
                 'type'          => 'text',
                 'description'   => lang('Only suspend packages that are this many days overdue. Enter 0 here to disable package suspension'),
                 'value'         => '7',
+            ),
+            lang('Create Ticket') => array(
+                'type'          => 'yesno',
+                'description'   => lang("When a package is suspended, automatically create a ticket under the user's account and notify him.<br>The ticket contents is defined in the <b>Notify Package Suspension</b> email template at <b><a href='index.php?fuse=admin&controller=settings&view=emailtemplates&settings=mail'>Settings&nbsp;>&nbsp;Email Templates</a></
+                'value'         => '0',
             ),
             lang('Run schedule - Minute')  => array(
                 'type'          => 'text',
@@ -110,6 +120,16 @@ class PluginAutosuspend extends ServicePlugin
         if ( $dueDays !=0 ) {
             $manualSuspend = array();
             $overdueArray = $this->_getOverduePackages();
+            if ($createTicket = $this->settings->get('plugin_autosuspend_Create Ticket')) {
+                $templategateway = new AutoresponderTemplateGateway();
+                $template = $templategateway->getEmailTemplateByName("Notify Package Suspension");
+                $ticketSubj = $this->replaceMsgGenericTags($template->getSubject());
+                $ticketMsg = $this->replaceMsgGenericTags($template->getContents());
+            }
+            $ticketTypeGateway = new TicketTypeGateway();
+            $this->ticketNotifications = new TicketNotifications($this->user);
+            $billingTicketType = $ticketTypeGateway->getBillingTicketType();
+
             foreach ($overdueArray as $packageId => $dueDate) {
                 $domain = new UserPackage($packageId, array(), $this->user);
                 if ($gateway->hasServerPlugin($domain->getCustomField("Server Id"), $pluginName)) {
@@ -125,9 +145,16 @@ class PluginAutosuspend extends ServicePlugin
                     }else{
                         $autoSuspend[] = $domain->getID();
                     }
-                } elseif (is_array($preEmailed) && !in_array($domain->getID(), $preEmailed)) {
+
+                    if ($createTicket) {
+                        $this->createTicket($ticketSubj, $ticketMsg, $domain, $dueDate, $billingTicketType);
+                    }
+                } elseif (!is_array($preEmailed) || !in_array($domain->getID(), $preEmailed)) {
                     $manualSuspend[] = $domain->getID();
                     $newPreEmailed[] = $domain->getID();
+                    if ($createTicket) {
+                        $this->createTicket($ticketSubj, $ticketMsg, $domain, $dueDate, $billingTicketType);
+                    }
                 } else {
                     $newPreEmailed[] = $domain->getID();
                 }
@@ -191,7 +218,7 @@ class PluginAutosuspend extends ServicePlugin
                     }else{
                         $autoUnsuspend[] = $domain->getID();
                     }
-                } elseif (is_array($preEmailed) && !in_array($domain->getID(), $preEmailed)) {
+                } elseif (!is_array($preEmailed) || !in_array($domain->getID(), $preEmailed)) {
                     $manualUnsuspend[] = $domain->getID();
                     $newPreEmailed[] = $domain->getID();
                 } else {
@@ -437,5 +464,69 @@ class PluginAutosuspend extends ServicePlugin
 
         asort($suspendedPackages);
         return $suspendedPackages;
+    }
+
+    private function createTicket($ticketSubj, $ticketMsg, $domain, $dueDate, $billingTicketType)
+    {
+        $date = date('Y-m-d H-i-s');
+        $user = new User($domain->getCustomerId());
+        $ticket = new Ticket();
+        $tickets = new TicketGateway();
+        if ($tickets->GetTicketCount() == 0) {
+             $id = $this->settings->get('Support Ticket Start Number');
+             $ticket->setForcedId($id);
+        }
+        $ticket->setUser($user);
+        $ticket->save();
+        $ticketSubj = $this->replaceMsgTags($ticketSubj, $user, $domain, $ticket, $dueDate);
+        $ticketMsg = $this->replaceMsgTags($ticketMsg, $user, $domain, $ticket, $dueDate);
+        $ticket->setSubject($ticketSubj);
+        $ticket->SetDateSubmitted($date);
+        $ticket->SetLastLogDateTime($date);
+        $ticket->setMethod(1);
+        $ticket->SetStatus(TICKET_STATUS_CLOSED);
+        $ticket->SetMessageType($billingTicketType);
+        $ticket->save();
+
+        $supportLog = Ticket_EventLog::newInstance(
+           false,
+           $user->getId(),
+           $ticket->getId(),
+           TICKET_EVENTLOG_CREATED,
+           $user->getId()
+        );
+        $supportLog->save();
+
+        // tickets can't be html-formatted
+        $ticket->addInitialLog(strip_tags(NE_MailGateway::br2nl($ticketMsg)), $date, $user);
+
+        $this->ticketNotifications->notifyCustomerForNewTicket($user, $ticket, $ticketMsg, '', '', true);
+    }
+
+    private function replaceMsgGenericTags($msg)
+    {
+        $msg = str_replace("[BILLINGEMAIL]", $this->settings->get("Billing E-mail"), $msg);
+        $msg = str_replace("[SUPPORTEMAIL]", $this->settings->get("Support E-mail"), $msg);
+        $msg = str_replace(array("[CLIENTAPPLICATIONURL]","%5BCLIENTAPPLICATIONURL%5D"), CE_Lib::getSoftwareURL(), $msg);
+        $msg = str_replace(array("[COMPANYNAME]","%5BCOMPANYNAME%5D"), $this->settings->get("Company Name"), $msg);
+        $msg = str_replace(array("[COMPANYADDRESS]","%5BCOMPANYADDRESS%5D"), $this->settings->get("Company Address"), $msg);
+        $msg = str_replace(array("[FORGOTPASSWORDURL]","%5BFORGOTPASSWORDURL%5D"), CE_Lib::getForgotUrl(), $msg);
+        return $msg;
+    }
+
+    private function replaceMsgTags($msg, $user, $domain, $ticket, $dueDate)
+    {
+        $msg = str_replace("[CLIENTNAME]", $user->getFullName(), $msg);
+        $msg = str_replace("[FIRSTNAME]", $user->getFirstName(), $msg);
+        $msg = str_replace("[LASTNAME]", $user->getLastName(), $msg);
+        $msg = str_replace("[CLIENTEMAIL]", $user->getEmail(), $msg);
+        $msg = str_replace("[ORGANIZATION]", $user->getOrganization(), $msg);
+        $msg = str_replace("[CCLASTFOUR]", $user->getCCLastFour(), $msg);
+        $msg = str_replace("[CCEXPDATE]", $user->getCCMonth()."/".$user->getCCYear(), $msg);
+        $msg = CE_Lib::ReplaceCustomFields($this->db, $msg,$user->getId(), $this->settings->get('Date Format'), $domain->getId());
+        $msg = str_replace("[PACKAGEID]", $domain->getId(), $msg);
+        $msg = str_replace("[TICKETNUMBER]", $ticket->getId(), $msg);
+        $msg = str_replace("[DATE]", date($this->settings->get('Date Format'), $dueDate), $msg);
+        return $msg;
     }
 }
