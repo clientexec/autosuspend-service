@@ -62,7 +62,7 @@ class PluginAutosuspend extends ServicePlugin
             ),
             lang('Create Ticket') => array(
                 'type'          => 'yesno',
-                'description'   => lang("When a package is suspended, automatically create a ticket under the user's account and notify him.<br>The ticket contents is defined in the <b>Notify Package Suspension</b> email template at <b><a href='index.php?fuse=admin&controller=settings&view=emailtemplates&settings=mail'>Settings&nbsp;>&nbsp;Email Templates</a></
+                'description'   => lang("When a package is suspended, automatically create a ticket under the user's account and notify him.<br>The ticket contents is defined in the <b>Notify Package Suspension</b> email template at <b><a href='index.php?fuse=admin&controller=settings&view=emailtemplates&settings=mail'>Settings&nbsp;>&nbsp;Email Templates</a></b>"),
                 'value'         => '0',
             ),
             lang('Run schedule - Minute')  => array(
