@@ -420,8 +420,10 @@ class PluginAutosuspend extends ServicePlugin
 
     function _getSuspendedPackages()
     {
-        // Select domains that should not be unsuspended due to an invoice being overdue with entries that do no apply to any domains. (apply to entire account)
         $statusSuspended = StatusAliasGateway::getInstance($this->user)->getPackageStatusIdsFor(PACKAGE_STATUS_SUSPENDED);
+        $userStatusActive = StatusAliasGateway::getInstance($this->user)->getUserStatusIdsFor(USER_STATUS_ACTIVE);
+
+        // Select domains that should not be unsuspended due to an invoice being overdue with entries that do no apply to any domains. (apply to entire account)
         $query = "SELECT d.id AS domain_id "
                 ."FROM `domains` d "
                 ."WHERE d.`status` IN (".implode(', ', $statusSuspended).") "
@@ -442,8 +444,10 @@ class PluginAutosuspend extends ServicePlugin
 
         // Find all packages eligible for unsuspend
         $query = "SELECT d.id AS domain_id "
-                ."FROM `domains` d "
-                ."WHERE d.`status` IN (".implode(', ', $statusSuspended).") "
+                ."FROM `domains` d, `users` u "
+                ."WHERE d.CustomerID = u.id "
+                ."AND d.`status` IN (".implode(', ', $statusSuspended).") "
+                ."AND u.status = IN (".implode(', ', $userStatusActive).") "
                 ."AND (NOT EXISTS(SELECT * "
                 ."                FROM `invoice` i "
                 ."                JOIN `invoiceentry` ie "
