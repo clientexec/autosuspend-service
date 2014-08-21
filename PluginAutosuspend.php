@@ -447,7 +447,7 @@ class PluginAutosuspend extends ServicePlugin
                 ."FROM `domains` d, `users` u "
                 ."WHERE d.CustomerID = u.id "
                 ."AND d.`status` IN (".implode(', ', $statusSuspended).") "
-                ."AND u.status = IN (".implode(', ', $userStatusActive).") "
+                ."AND u.status IN (".implode(', ', $userStatusActive).") "
                 ."AND (NOT EXISTS(SELECT * "
                 ."                FROM `invoice` i "
                 ."                JOIN `invoiceentry` ie "
