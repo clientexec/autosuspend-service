@@ -50,7 +50,7 @@ class PluginAutosuspend extends ServicePlugin
                 'description'   => lang('When enabled, all customers packages will be suspended if a recurring fee not associated with a package is overdue.'),
                 'value'         => '1',
             ),
-            lang('Enable/Disable Unsuspension') => array(
+            lang('Enable Unsuspension') => array(
                 'type'          => 'yesno',
                 'description'   => lang('When enabled, suspended and paid packages will be unsuspended when this service is run.'),
                 'value'         => '0',
@@ -200,7 +200,7 @@ class PluginAutosuspend extends ServicePlugin
             array_unshift($messages, $this->user->lang('%s package(s) suspended', sizeof($autoSuspend)));
         }
 
-        if ( $this->settings->get('plugin_autosuspend_Enable/Disable Unsuspension') !=0 ) {
+        if ( $this->settings->get('plugin_autosuspend_Enable Unsuspension') !=0 ) {
             $manualUnsuspend = array();
             $suspendedArray = $this->_getSuspendedPackages();
             foreach ($suspendedArray as $packageId) {
@@ -263,7 +263,7 @@ class PluginAutosuspend extends ServicePlugin
             }
             array_unshift($messages, $this->user->lang('%s package(s) unsuspended', sizeof($autoUnsuspend)));
         }
-        if($this->settings->get('plugin_autosuspend_Enable/Disable Unsuspension')==0 and $dueDays==0) {
+        if($this->settings->get('plugin_autosuspend_Enable Unsuspension')==0 and $dueDays==0) {
             array_unshift($messages, $this->user->lang('As you disabled both the services. The system has nothing to do.'));
         }
         $this->settings->updateValue("plugin_autosuspend_Notified Package List", serialize($newPreEmailed));
