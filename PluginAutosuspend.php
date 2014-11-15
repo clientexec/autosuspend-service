@@ -532,6 +532,7 @@ class PluginAutosuspend extends ServicePlugin
         $msg = str_replace("[CCEXPDATE]", $user->getCCMonth()."/".$user->getCCYear(), $msg);
         $msg = CE_Lib::ReplaceCustomFields($this->db, $msg,$user->getId(), $this->settings->get('Date Format'), $domain->getId());
         $msg = str_replace("[PACKAGEID]", $domain->getId(), $msg);
+        $msg = str_replace("[PACKAGENAME]", $domain->getReference(true), $msg);
         $msg = str_replace("[PLANNAME]", $package->planname, $msg);
         $msg = str_replace("[TICKETNUMBER]", $ticket->getId(), $msg);
         $msg = str_replace("[DATE]", date($this->settings->get('Date Format'), $dueDate), $msg);
