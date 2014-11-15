@@ -488,7 +488,7 @@ class PluginAutosuspend extends ServicePlugin
         $ticket->SetDateSubmitted($date);
         $ticket->SetLastLogDateTime($date);
         $ticket->setMethod(1);
-        $ticket->SetStatus(TICKET_STATUS_CLOSED);
+        $ticket->SetStatus(TICKET_STATUS_OPEN);
         $ticket->SetMessageType($billingTicketType);
         $ticket->save();
 
