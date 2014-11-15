@@ -520,6 +520,9 @@ class PluginAutosuspend extends ServicePlugin
 
     private function replaceMsgTags($msg, $user, $domain, $ticket, $dueDate)
     {
+        include_once 'modules/admin/models/Package.php';
+        $package = new Package($domain->Plan);
+
         $msg = str_replace("[CLIENTNAME]", $user->getFullName(), $msg);
         $msg = str_replace("[FIRSTNAME]", $user->getFirstName(), $msg);
         $msg = str_replace("[LASTNAME]", $user->getLastName(), $msg);
@@ -529,6 +532,7 @@ class PluginAutosuspend extends ServicePlugin
         $msg = str_replace("[CCEXPDATE]", $user->getCCMonth()."/".$user->getCCYear(), $msg);
         $msg = CE_Lib::ReplaceCustomFields($this->db, $msg,$user->getId(), $this->settings->get('Date Format'), $domain->getId());
         $msg = str_replace("[PACKAGEID]", $domain->getId(), $msg);
+        $msg = str_replace("[PLANNAME]", $package->planname, $msg);
         $msg = str_replace("[TICKETNUMBER]", $ticket->getId(), $msg);
         $msg = str_replace("[DATE]", date($this->settings->get('Date Format'), $dueDate), $msg);
         return $msg;
