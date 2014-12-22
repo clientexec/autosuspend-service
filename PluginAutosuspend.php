@@ -522,7 +522,6 @@ class PluginAutosuspend extends ServicePlugin
     {
         include_once 'modules/admin/models/Package.php';
         $package = new Package($domain->Plan);
-
         $msg = str_replace("[CLIENTNAME]", $user->getFullName(), $msg);
         $msg = str_replace("[FIRSTNAME]", $user->getFirstName(), $msg);
         $msg = str_replace("[LASTNAME]", $user->getLastName(), $msg);
@@ -532,8 +531,17 @@ class PluginAutosuspend extends ServicePlugin
         $msg = str_replace("[CCEXPDATE]", $user->getCCMonth()."/".$user->getCCYear(), $msg);
         $msg = CE_Lib::ReplaceCustomFields($this->db, $msg,$user->getId(), $this->settings->get('Date Format'), $domain->getId());
         $msg = str_replace("[PACKAGEID]", $domain->getId(), $msg);
-        $msg = str_replace("[PACKAGENAME]", $domain->getReference(true), $msg);
-        $msg = str_replace("[PLANNAME]", $package->planname, $msg);
+        include_once 'modules/admin/models/Translations.php';
+        $languages = CE_Lib::getEnabledLanguages();
+        $translations = new Translations();
+        $languageKey = ucfirst(strtolower($user->getRealLanguage()));
+        $msg = str_replace("[PACKAGENAME]", $domain->getReference(true, true, $languageKey), $msg);
+        if(count($languages) > 1){
+            $planname = $translations->getValue(PRODUCT_NAME, $package->getId(), $languageKey, $package->planname);
+            $msg = str_replace("[PLANNAME]", $planname, $msg);
+        }else{
+            $msg = str_replace("[PLANNAME]", $package->planname, $msg);
+        }
         $msg = str_replace("[TICKETNUMBER]", $ticket->getId(), $msg);
         $msg = str_replace("[DATE]", date($this->settings->get('Date Format'), $dueDate), $msg);
         return $msg;
