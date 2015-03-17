@@ -120,18 +120,46 @@ class PluginAutosuspend extends ServicePlugin
         if ( $dueDays !=0 ) {
             $manualSuspend = array();
             $overdueArray = $this->_getOverduePackages();
-            if ($createTicket = $this->settings->get('plugin_autosuspend_Create Ticket')) {
+            $createTicket = $this->settings->get('plugin_autosuspend_Create Ticket');
+
+            if ($createTicket) {
                 $templategateway = new AutoresponderTemplateGateway();
                 $template = $templategateway->getEmailTemplateByName("Notify Package Suspension");
-                $ticketSubj = $this->replaceMsgGenericTags($template->getSubject());
-                $ticketMsg = $this->replaceMsgGenericTags($template->getContents());
+
+                $strSubjectEmailStringOriginal = $template->getSubject();
+                $strEmailArrOriginal = $template->getContents();
+
+                $templateID = $template->getId();
             }
+
             $ticketTypeGateway = new TicketTypeGateway();
             $this->ticketNotifications = new TicketNotifications($this->user);
             $billingTicketType = $ticketTypeGateway->getBillingTicketType();
 
             foreach ($overdueArray as $packageId => $dueDate) {
                 $domain = new UserPackage($packageId, array(), $this->user);
+
+                $user = new User($domain->getCustomerId());
+                if ($createTicket) {
+                    $strSubjectEmailString = $strSubjectEmailStringOriginal;
+                    $strEmailArr = $strEmailArrOriginal;
+
+                    if($templateID !== false){
+                        include_once 'modules/admin/models/Translations.php';
+                        $languages = CE_Lib::getEnabledLanguages();
+                        $translations = new Translations();
+                        $languageKey = ucfirst(strtolower($user->getRealLanguage()));
+
+                        if(count($languages) > 1){
+                            $strSubjectEmailString = $translations->getValue(EMAIL_SUBJECT, $templateID, $languageKey, $strSubjectEmailString);
+                            $strEmailArr = $translations->getValue(EMAIL_CONTENT, $templateID, $languageKey, $strEmailArr);
+                        }
+                    }
+
+                    $ticketSubj = $this->replaceMsgGenericTags($strSubjectEmailString);
+                    $ticketMsg = $this->replaceMsgGenericTags($strEmailArr);
+                }
+
                 if ($gateway->hasServerPlugin($domain->getCustomField("Server Id"), $pluginName)) {
                     $errors = false;
                     try{
