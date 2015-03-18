@@ -563,7 +563,7 @@ class PluginAutosuspend extends ServicePlugin
         $languages = CE_Lib::getEnabledLanguages();
         $translations = new Translations();
         $languageKey = ucfirst(strtolower($user->getRealLanguage()));
-        $msg = str_replace("[PACKAGENAME]", $domain->getReference(true, true, $languageKey), $msg);
+        $msg = str_replace("[PACKAGENAME]", $domain->getReference(true, true, '', $languageKey), $msg);
         if(count($languages) > 1){
             $planname = $translations->getValue(PRODUCT_NAME, $package->getId(), $languageKey, $package->planname);
             $msg = str_replace("[PLANNAME]", $planname, $msg);
