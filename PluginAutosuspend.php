@@ -550,7 +550,7 @@ class PluginAutosuspend extends ServicePlugin
     {
         include_once 'modules/admin/models/Package.php';
         $package = new Package($domain->Plan);
-        $msg = str_replace("[CLIENTNAME]", $user->getFullName(), $msg);
+        $msg = str_replace("[CLIENTNAME]", $user->getFullName(true), $msg);
         $msg = str_replace("[FIRSTNAME]", $user->getFirstName(), $msg);
         $msg = str_replace("[LASTNAME]", $user->getLastName(), $msg);
         $msg = str_replace("[CLIENTEMAIL]", $user->getEmail(), $msg);
