@@ -175,7 +175,12 @@ class PluginAutosuspend extends ServicePlugin
                     }
 
                     if ($createTicket) {
-                        $this->createTicket($ticketSubj, $ticketMsg, $domain, $dueDate, $billingTicketType);
+                        if (!is_array($preEmailed) || !in_array($domain->getID(), $preEmailed)) {
+                            $this->createTicket($ticketSubj, $ticketMsg, $domain, $dueDate, $billingTicketType);
+                            if($errors){
+                                $newPreEmailed[] = $domain->getID();
+                            }
+                        }
                     }
                 } elseif (!is_array($preEmailed) || !in_array($domain->getID(), $preEmailed)) {
                     $manualSuspend[] = $domain->getID();
