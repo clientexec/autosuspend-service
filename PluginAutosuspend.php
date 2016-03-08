@@ -149,6 +149,7 @@ class PluginAutosuspend extends ServicePlugin
                         $languages = CE_Lib::getEnabledLanguages();
                         $translations = new Translations();
                         $languageKey = ucfirst(strtolower($user->getRealLanguage()));
+                        CE_Lib::setI18n($languageKey);
 
                         if(count($languages) > 1){
                             $strSubjectEmailString = $translations->getValue(EMAIL_SUBJECT, $templateID, $languageKey, $strSubjectEmailString);
@@ -567,7 +568,10 @@ class PluginAutosuspend extends ServicePlugin
         include_once 'modules/admin/models/Translations.php';
         $languages = CE_Lib::getEnabledLanguages();
         $translations = new Translations();
+
         $languageKey = ucfirst(strtolower($user->getRealLanguage()));
+        CE_Lib::setI18n($languageKey);
+
         $msg = str_replace("[PACKAGENAME]", $domain->getReference(true, true, '', $languageKey), $msg);
         if(count($languages) > 1){
             $planname = $translations->getValue(PRODUCT_NAME, $package->getId(), $languageKey, $package->planname);
